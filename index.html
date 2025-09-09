@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sudbury RCIP Scoring Calculator</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 2rem; text-align: center; }
+  h1 { color: #24292e; }
+  label { display: block; margin-top: 1rem; }
+  select { width: 300px; padding: 0.5rem; margin-top: 0.3rem; }
+  button, a.button {
+    margin-top: 1.5rem;
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
+    background-color: #0366d6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  button:hover, a.button:hover { background-color: #024ea2; }
+  #result { margin-top: 1.5rem; font-weight: bold; font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<h1>Sudbury RCIP Scoring Calculator</h1>
+
+<div id="calculator"></div>
+
+<!-- Buttons -->
+<button onclick="calculatePoints()">Calculate Points</button>
+<a class="button" href="https://investsudbury.ca/programs/rural-community-immigration-pilot/" target="_blank">RCIP Info</a>
+
+<div id="result">Total Points: 0</div>
+
+<script>
+// Define categories and options
+const categories = {
+  "Priority Sector": [
+    "Natural and Applied Sciences",
+    "Health",
+    "Education, Social, Community and Government Services",
+    "Trades and Transport",
+    "Natural Resources and Agriculture"
+  ],
+  "Priority Occupation": [
+    "Mining Engineers (21330)",
+    "Mechanical Engineers (21301)",
+    "Geological Engineers (21331)",
+    "Civil Engineering Technologists and Technicians (22300)",
+    "Mechanical Engineering Technologists and Technicians (22301)",
+    "Electrical and Electronics Engineering Technologists and Technicians (22310)",
+    "Physiotherapists (31202)",
+    "Registered Nurses (31301)",
+    "Registered Practical Nurses (32101)",
+    "Social and Community Service Workers (42201)",
+    "Early Childhood Educators and Assistants (42202)",
+    "Heavy Duty Equipment Mechanics (72401)",
+    "Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers (72410)",
+    "Welders and Related Machine Operators (72106)",
+    "Construction Millwrights and Industrial Mechanics (72400)",
+    "Heavy Equipment Operators (73400)",
+    "Construction Trades Helpers and Labourers (75110)",
+    "Truck Drivers (73300)",
+    "Labourers in Metal Processing (95100)"
+  ],
+  "Work Experience / International Graduate": [
+    "1 year full-time work experience",
+    "2 years full-time work experience",
+    "3 years full-time work experience",
+    "4+ years full-time work experience",
+    "International graduate exemption"
+  ],
+  "Language Proficiency (TEER 0/1)": ["CLB/NCLC 9+", "CLB/NCLC 8", "CLB/NCLC 7", "CLB/NCLC 6"],
+  "Language Proficiency (TEER 2/3)": ["CLB/NCLC 8+", "CLB/NCLC 7", "CLB/NCLC 6", "CLB/NCLC 5"],
+  "Language Proficiency (TEER 4/5)": ["CLB/NCLC 7+", "CLB/NCLC 6", "CLB/NCLC 5", "CLB/NCLC 4"],
+  "Education": ["Master's/PhD", "Bachelor's (3+ years)", "Post-secondary (1+ year)", "Canadian Secondary School Diploma"],
+  "Intent to Reside": ["Submitted genuine statement", "Not submitted"],
+  "Previous Work/Study in Community": ["0 years", "1 year", "2 years", "3+ years"],
+  "Close Family in Community": ["No", "Yes"],
+  "Community Involvement": ["No", "Yes"],
+  "Property in Community": ["No", "Yes"],
+  "Spouse/Common-law Experience": ["No", "Yes"]
+};
+
+const pointsMapping = {
+  "Priority Sector": [10, 15, 10, 15, 15],
+  "Priority Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
+  "Work Experience / International Graduate": [10,15,20,25,10],
+  "Language Proficiency (TEER 0/1)": [25,20,15,10],
+  "Language Proficiency (TEER 2/3)": [25,20,15,10],
+  "Language Proficiency (TEER 4/5)": [25,20,15,10],
+  "Education": [25,20,15,10],
+  "Intent to Reside": [10,0],
+  "Previous Work/Study in Community": [0,2,4,6],
+  "Close Family in Community": [0,2],
+  "Community Involvement": [0,2],
+  "Property in Community": [0,2],
+  "Spouse/Common-law Experience": [0,3]
+};
+
+// Generate dropdowns
+const calculatorDiv = document.getElementById('calculator');
+const selectedValues = {};
+
+for (const category in categories) {
+  const label = document.createElement('label');
+  label.innerText = category;
+
+  const select = document.createElement('select');
+  categories[category].forEach(option => {
+    const opt = document.createElement('option');
+    opt.value = option;
+    opt.innerText = option;
+    select.appendChild(opt);
+  });
+
+  selectedValues[category] = select;
+
+  calculatorDiv.appendChild(label);
+  calculatorDiv.appendChild(select);
+}
+
+// Calculate points
+function calculatePoints() {
+  let totalPoints = 0;
+
+  for (const category in selectedValues) {
+    const select = selectedValues[category];
+    const selectedOption = select.value;
+    const index = categories[category].indexOf(selectedOption);
+    totalPoints += pointsMapping[category][index];
+  }
+
+  document.getElementById('result').innerText = `Total Points: ${totalPoints}`;
+}
+</script>
+</body>
+</html>
