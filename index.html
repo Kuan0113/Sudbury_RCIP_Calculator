@@ -46,14 +46,31 @@
 const categories = {
   "Job Offer - Section": ["Natural and Applied Sciences", "Health", "Education, Social, Community and Government Services", "Trades and Transport", "Natural Resources and Agriculture"],
   "Job Offer - Occupation": [
-    "Mining Engineers (21330)", "Mechanical Engineers (21301)", "Geological Engineers (21331)", "Civil Engineering Technologists and Technicians (22300)", 
-    "Mechanical Engineering Technologists and Technicians (22301)", "Electrical and Electronics Engineering Technologists and Technicians (22310)",
-    "Physiotherapists (31202)", "Registered Nurses (31301)", "Registered Practical Nurses (32101)", "Social and Community Service Workers (42201)",
-    "Early Childhood Educators and Assistants (42202)", "Heavy Duty Equipment Mechanics (72401)", 
-    "Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers (72410)",
-    "Welders and Related Machine Operators (72106)", "Construction Millwrights and Industrial Mechanics (72400)",
-    "Heavy Equipment Operators (73400)", "Construction Trades Helpers and Labourers (75110)",
-    "Truck Drivers (73300)", "Labourers in Metal Processing (95100)"
+    "12200 – Accounting Technicians and Bookkeepers",
+    "13110 – Administrative Assistants",
+    "21330 – Mining Engineers",
+    "21301 – Mechanical Engineers",
+    "21331 – Geological Engineers",
+    "22300 – Civil Engineering Technologists and Technicians",
+    "22301 – Mechanical Engineering Technologists and Technicians",
+    "22310 – Electrical and Electronics Engineering Technologists and Technicians",
+    "31202 – Physiotherapists",
+    "31301 – Registered Nurses",
+    "32101 – Registered Practical Nurses",
+    "32109 – Rehabilitation Assistants",
+    "33102 – Personal Care Attendants",
+    "33100 – Dental Assistants",
+    "42201 – Social and Community Service Workers",
+    "42202 – Early Childhood Educators and Assistants",
+    "44101 – Home Support Workers, Caregivers, and related occupations",
+    "72401 – Heavy Duty Equipment Mechanics",
+    "72410 – Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers",
+    "72106 – Welders and Related Machine Operators",
+    "72400 – Construction Millwrights and Industrial Mechanics",
+    "73400 – Heavy Equipment Operators",
+    "75110 – Construction Trades Helpers and Labourers",
+    "73300 – Truck Drivers",
+    "95100 – Labourers in Metal Processing"
   ],
   "Human Capital - Work Experience": ["1 year full-time work experience", "2 years full-time work experience", "3 years full-time work experience", "4+ years full-time work experience", "International graduate exemption"],
   "Human Capital - Language Proficiency TEER": ["0/1", "2/3", "4/5"],
@@ -64,7 +81,33 @@ const categories = {
 // 對應分數
 const pointsMapping = {
   "Job Offer - Section": [10,15,10,15,15],
-  "Job Offer - Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
+  "Job Offer - Occupation": [
+    0, // Accounting Technicians and Bookkeepers
+    0, // Administrative Assistants
+    10, // Mining Engineers
+    10, // Mechanical Engineers
+    10, // Geological Engineers
+    10, // Civil Engineering Technologists and Technicians
+    10, // Mechanical Engineering Technologists and Technicians
+    10, // Electrical and Electronics Engineering Technologists and Technicians
+    10, // Physiotherapists
+    10, // Registered Nurses
+    8,  // Registered Practical Nurses
+    0,  // Rehabilitation Assistants
+    0,  // Personal Care Attendants
+    0,  // Dental Assistants
+    5,  // Social and Community Service Workers
+    7,  // Early Childhood Educators and Assistants
+    0,  // Home Support Workers, Caregivers, and related occupations
+    10, // Heavy Duty Equipment Mechanics
+    10, // Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers
+    10, // Welders and Related Machine Operators
+    10, // Construction Millwrights and Industrial Mechanics
+    10, // Heavy Equipment Operators
+    5,  // Construction Trades Helpers and Labourers
+    2,  // Truck Drivers
+    2   // Labourers in Metal Processing
+  ],
   "Human Capital - Work Experience": [10,15,20,25,10],
   "Human Capital - Education": [25,20,15,10],
   "Human Capital - Intent to Reside": [10,0],
@@ -94,6 +137,7 @@ const maxScores = {
   "Property in Community": 2,
   "Spouse/Common-law Experience": 3
 };
+
 
 // 生成表單
 const calculatorDiv = document.getElementById('calculator');
