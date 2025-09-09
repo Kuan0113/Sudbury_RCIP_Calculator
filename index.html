@@ -35,8 +35,8 @@
 <div id="calculator"></div>
 
 <button onclick="calculatePoints()">Calculate Points</button>
-<button onclick="toggleDetails()">Show Details</button>
-<a class="button" href="https://investsudbury.ca/programs/rural-community-immigration-pilot/" target="_blank">RCIP Info</a>
+<button onclick="calculatePoints();toggleDetails()">Show Details</button>
+<a class="button" href="https://investsudbury.ca/why-sudbury/newcomers/rcipfcip/" target="_blank">RCIP Info</a>
 
 <div id="result"></div>
 <div id="details"></div>
@@ -56,12 +56,9 @@ const categories = {
     "Truck Drivers (73300)", "Labourers in Metal Processing (95100)"
   ],
   "Human Capital - Work Experience": ["1 year full-time work experience", "2 years full-time work experience", "3 years full-time work experience", "4+ years full-time work experience", "International graduate exemption"],
-  "Human Capital - Language Proficiency (TEER 0/1)": ["CLB/NCLC 9+", "CLB/NCLC 8", "CLB/NCLC 7", "CLB/NCLC 6"],
-  "Human Capital - Language Proficiency (TEER 2/3)": ["CLB/NCLC 8+", "CLB/NCLC 7", "CLB/NCLC 6", "CLB/NCLC 5"],
-  "Human Capital - Language Proficiency (TEER 4/5)": ["CLB/NCLC 7+", "CLB/NCLC 6", "CLB/NCLC 5", "CLB/NCLC 4"],
+  "Human Capital - Language Proficiency TEER": ["0/1", "2/3", "4/5"],
   "Human Capital - Education": ["Master's/PhD", "Bachelor's (3+ years)", "Post-secondary (1+ year)", "Canadian Secondary School Diploma"],
-  "Human Capital - Intent to Reside": ["Submitted genuine statement", "Not submitted"],
-  "Human Capital - Bonus Points": ["Previous Work/Study 1 year", "Previous Work/Study 2 years", "Previous Work/Study 3+ years", "Close Family in Community", "Community Involvement", "Property in Community", "Spouse/Common-law Experience"]
+  "Human Capital - Intent to Reside": ["Submitted genuine statement", "Not submitted"]
 };
 
 // 對應分數
@@ -69,12 +66,18 @@ const pointsMapping = {
   "Job Offer - Section": [10,15,10,15,15],
   "Job Offer - Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
   "Human Capital - Work Experience": [10,15,20,25,10],
-  "Human Capital - Language Proficiency (TEER 0/1)": [25,20,15,10],
-  "Human Capital - Language Proficiency (TEER 2/3)": [25,20,15,10],
-  "Human Capital - Language Proficiency (TEER 4/5)": [25,20,15,10],
   "Human Capital - Education": [25,20,15,10],
   "Human Capital - Intent to Reside": [10,0],
-  "Human Capital - Bonus Points": [2,4,6,2,2,2,3] // 可累計，最大 15
+  "LanguageProficiency": {
+    "0/1": {"CLB/NCLC 6":10,"CLB/NCLC 7":15,"CLB/NCLC 8":20,"CLB/NCLC 9+":25},
+    "2/3": {"CLB/NCLC 5":10,"CLB/NCLC 6":15,"CLB/NCLC 7":20,"CLB/NCLC 8+":25},
+    "4/5": {"CLB/NCLC 4":10,"CLB/NCLC 5":15,"CLB/NCLC 6":20,"CLB/NCLC 7+":25}
+  },
+  "Previous Work/Study in Community": [2,4,6],
+  "Close Family in Community": [2],
+  "Community Involvement": [2],
+  "Property in Community": [2],
+  "Spouse/Common-law Experience": [3]
 };
 
 // 分數上限
@@ -82,41 +85,60 @@ const maxScores = {
   "Job Offer - Section": 15,
   "Job Offer - Occupation": 10,
   "Human Capital - Work Experience": 25,
-  "Human Capital - Language Proficiency (TEER 0/1)": 25,
-  "Human Capital - Language Proficiency (TEER 2/3)": 25,
-  "Human Capital - Language Proficiency (TEER 4/5)": 25,
+  "LanguageProficiency": 25,
   "Human Capital - Education": 25,
   "Human Capital - Intent to Reside": 10,
-  "Human Capital - Bonus Points": 15
+  "Previous Work/Study in Community": 6,
+  "Close Family in Community": 2,
+  "Community Involvement": 2,
+  "Property in Community": 2,
+  "Spouse/Common-law Experience": 3
 };
 
 // 生成表單
 const calculatorDiv = document.getElementById('calculator');
 const selectedValues = {};
 
+// 一般選項
 for (const category in categories) {
   const h2 = document.createElement('h2');
   h2.innerText = category;
   calculatorDiv.appendChild(h2);
 
-  if(category === "Human Capital - Bonus Points") {
-    const checkboxGroup = document.createElement('div');
-    checkboxGroup.className = 'checkbox-group';
-    categories[category].forEach((option, idx) => {
-      const label = document.createElement('label');
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.value = option;
-      input.dataset.idx = idx;
-      label.appendChild(input);
-      label.appendChild(document.createTextNode(' ' + option));
-      checkboxGroup.appendChild(label);
+  if(category === "Human Capital - Language Proficiency TEER") {
+    const teerSelect = document.createElement('select');
+    teerSelect.id = 'teerSelect';
+    teerSelect.innerHTML = '<option value="">Select TEER</option>';
+    categories[category].forEach(opt=>{
+      const option = document.createElement('option');
+      option.value = opt;
+      option.innerText = opt;
+      teerSelect.appendChild(option);
     });
-    calculatorDiv.appendChild(checkboxGroup);
-    selectedValues[category] = checkboxGroup;
+    calculatorDiv.appendChild(teerSelect);
+
+    const clbSelect = document.createElement('select');
+    clbSelect.id = 'clbSelect';
+    clbSelect.innerHTML = '<option value="">Select CLB/NCLC</option>';
+    calculatorDiv.appendChild(clbSelect);
+
+    teerSelect.addEventListener('change', ()=>{
+      const selectedTEER = teerSelect.value;
+      clbSelect.innerHTML = '<option value="">Select CLB/NCLC</option>';
+      if(selectedTEER){
+        for(const clb in pointsMapping.LanguageProficiency[selectedTEER]){
+          const opt = document.createElement('option');
+          opt.value = clb;
+          opt.innerText = clb;
+          clbSelect.appendChild(opt);
+        }
+      }
+    });
+
+    selectedValues['LanguageProficiency'] = {teer: teerSelect, clb: clbSelect};
   } else {
     const select = document.createElement('select');
-    categories[category].forEach(option => {
+    categories[category].forEach(option=>{
       const opt = document.createElement('option');
       opt.value = option;
       opt.innerText = option;
@@ -127,57 +149,99 @@ for (const category in categories) {
   }
 }
 
+// Bonus Points 區塊
+const h2Bonus = document.createElement('h2');
+h2Bonus.innerText = 'Bonus Points';
+calculatorDiv.appendChild(h2Bonus);
+
+// Previous Work/Study (單選)
+const previousSelect = document.createElement('select');
+previousSelect.id = 'previousSelect';
+["1 year","2 years","3+ years"].forEach((opt,idx)=>{
+  const option = document.createElement('option');
+  option.value = opt;
+  option.innerText = opt;
+  previousSelect.appendChild(option);
+});
+calculatorDiv.appendChild(previousSelect);
+selectedValues['Previous Work/Study in Community'] = previousSelect;
+
+// 其他多選
+const bonusCheckboxes = ["Close Family in Community","Community Involvement","Property in Community","Spouse/Common-law Experience"];
+bonusCheckboxes.forEach(cat=>{
+  const div = document.createElement('div');
+  div.className = 'checkbox-group';
+  const label = document.createElement('label');
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.dataset.idx = 0;
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(' ' + cat));
+  div.appendChild(label);
+  calculatorDiv.appendChild(div);
+  selectedValues[cat] = div;
+});
+
 // 計算總分
-let sectionScores = {}; // 儲存每區分數
-function calculatePoints() {
-  let jobOfferTotal = 0;
-  let humanCapitalTotal = 0;
-  sectionScores = {};
+let sectionScores = {};
+function calculatePoints(){
+  let jobOfferTotal=0;
+  let humanCapitalTotal=0;
+  sectionScores={};
 
-  for (const category in selectedValues) {
-    let score = 0;
-    if(category === "Human Capital - Bonus Points") {
+  for(const category in selectedValues){
+    let score=0;
+    if(['Close Family in Community','Community Involvement','Property in Community','Spouse/Common-law Experience'].includes(category)){
       const checkboxes = selectedValues[category].querySelectorAll('input[type=checkbox]');
-      checkboxes.forEach(cb => {
-        if(cb.checked){
-          score += pointsMapping[category][cb.dataset.idx];
-        }
-      });
-      score = Math.min(score, maxScores[category]);
+      checkboxes.forEach(cb=>{if(cb.checked) score+=pointsMapping[category][cb.dataset.idx];});
+      score=Math.min(score,maxScores[category]);
+    } else if(category==='LanguageProficiency'){
+      const teer=selectedValues[category].teer.value;
+      const clb=selectedValues[category].clb.value;
+      if(teer && clb) score=pointsMapping.LanguageProficiency[teer][clb];
+      score=Math.min(score,maxScores['LanguageProficiency']);
     } else {
-      const select = selectedValues[category];
-      const selectedOption = select.value;
-      const index = categories[category].indexOf(selectedOption);
-      score = Math.min(pointsMapping[category][index], maxScores[category]);
+      const sel=selectedValues[category];
+      const idx = Array.from(sel.options).findIndex(o=>o.selected);
+      score = Math.min(pointsMapping[category][idx], maxScores[category]);
     }
-    sectionScores[category] = score;
-
-    if(category.startsWith("Job Offer")) jobOfferTotal += score;
-    else humanCapitalTotal += score;
+    sectionScores[category]=score;
+    if(category.startsWith('Job Offer')) jobOfferTotal+=score;
+    else humanCapitalTotal+=score;
   }
 
-  document.getElementById('result').innerHTML = `
-    Total Points for Job Offer: ${Math.min(jobOfferTotal,25)} / 25<br>
-    Human Capital Assessment: ${Math.min(humanCapitalTotal,100)} / 100
-  `;
-
-  document.getElementById('details').style.display = 'none'; // hide details initially
+document.getElementById('result').innerHTML=`
+  Total Points for Job Offer: ${Math.min(jobOfferTotal,25)} / 25<br>
+  Human Capital Assessment: ${Math.min(humanCapitalTotal,100)} / 100<br>
+  <strong>Total Points: ${Math.min(jobOfferTotal,25) + Math.min(humanCapitalTotal,100)} / 125</strong>
+`;
+  document.getElementById('details').style.display='none';
 }
 
-// 顯示/隱藏詳細分數
 function toggleDetails(){
   const detailsDiv = document.getElementById('details');
-  if(detailsDiv.style.display === 'none'){
-    let detailText = '';
-    for (const section in sectionScores) {
-      detailText += `${section}: ${sectionScores[section]} / ${maxScores[section]}<br>`;
+  if(detailsDiv.style.display==='none'){
+    let text='';
+    let bonusTotal = 0;
+
+    for(const sec in sectionScores){
+      if(['Previous Work/Study in Community','Close Family in Community','Community Involvement','Property in Community','Spouse/Common-law Experience'].includes(sec)){
+        bonusTotal += sectionScores[sec];
+      } else {
+        text+=`${sec}: ${sectionScores[sec]} / ${maxScores[sec] || ''}<br>`;
+      }
     }
-    detailsDiv.innerHTML = detailText;
-    detailsDiv.style.display = 'block';
+
+    bonusTotal = Math.min(bonusTotal, 15);
+    text += `Bonus Points: ${bonusTotal} / 15<br>`; // 合併Bonus
+
+    detailsDiv.innerHTML=text;
+    detailsDiv.style.display='block';
   } else {
-    detailsDiv.style.display = 'none';
+    detailsDiv.style.display='none';
   }
 }
+
 </script>
 </body>
 </html>
