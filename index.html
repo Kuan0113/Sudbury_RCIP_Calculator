@@ -7,6 +7,7 @@
 <style>
   body { font-family: Arial, sans-serif; margin: 2rem; text-align: center; }
   h1 { color: #24292e; }
+  h2 { margin-top: 2rem; color: #0366d6; }
   label { display: block; margin-top: 1rem; }
   select { width: 300px; padding: 0.5rem; margin-top: 0.3rem; }
   button, a.button {
@@ -31,85 +32,72 @@
 
 <div id="calculator"></div>
 
-<!-- Buttons -->
 <button onclick="calculatePoints()">Calculate Points</button>
-<a class="button" href="https://investsudbury.ca/programs/rural-community-immigration-pilot/" target="_blank">RCIP Info</a>
+<a class="button" href="https://investsudbury.ca/why-sudbury/newcomers/rcipfcip/" target="_blank">RCIP Info</a>
 
-<div id="result">Total Points: 0</div>
+<div id="result"></div>
 
 <script>
-// Define categories and options
+// 分區類別與選項
 const categories = {
-  "Priority Sector": [
-    "Natural and Applied Sciences",
-    "Health",
-    "Education, Social, Community and Government Services",
-    "Trades and Transport",
-    "Natural Resources and Agriculture"
-  ],
-  "Priority Occupation": [
-    "Mining Engineers (21330)",
-    "Mechanical Engineers (21301)",
-    "Geological Engineers (21331)",
-    "Civil Engineering Technologists and Technicians (22300)",
-    "Mechanical Engineering Technologists and Technicians (22301)",
-    "Electrical and Electronics Engineering Technologists and Technicians (22310)",
-    "Physiotherapists (31202)",
-    "Registered Nurses (31301)",
-    "Registered Practical Nurses (32101)",
-    "Social and Community Service Workers (42201)",
-    "Early Childhood Educators and Assistants (42202)",
-    "Heavy Duty Equipment Mechanics (72401)",
+  "Job Offer - Section": ["Natural and Applied Sciences", "Health", "Education, Social, Community and Government Services", "Trades and Transport", "Natural Resources and Agriculture"],
+  "Job Offer - Occupation": [
+    "Mining Engineers (21330)", "Mechanical Engineers (21301)", "Geological Engineers (21331)", "Civil Engineering Technologists and Technicians (22300)", 
+    "Mechanical Engineering Technologists and Technicians (22301)", "Electrical and Electronics Engineering Technologists and Technicians (22310)",
+    "Physiotherapists (31202)", "Registered Nurses (31301)", "Registered Practical Nurses (32101)", "Social and Community Service Workers (42201)",
+    "Early Childhood Educators and Assistants (42202)", "Heavy Duty Equipment Mechanics (72401)", 
     "Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers (72410)",
-    "Welders and Related Machine Operators (72106)",
-    "Construction Millwrights and Industrial Mechanics (72400)",
-    "Heavy Equipment Operators (73400)",
-    "Construction Trades Helpers and Labourers (75110)",
-    "Truck Drivers (73300)",
-    "Labourers in Metal Processing (95100)"
+    "Welders and Related Machine Operators (72106)", "Construction Millwrights and Industrial Mechanics (72400)",
+    "Heavy Equipment Operators (73400)", "Construction Trades Helpers and Labourers (75110)",
+    "Truck Drivers (73300)", "Labourers in Metal Processing (95100)"
   ],
-  "Work Experience / International Graduate": [
-    "1 year full-time work experience",
-    "2 years full-time work experience",
-    "3 years full-time work experience",
-    "4+ years full-time work experience",
-    "International graduate exemption"
-  ],
-  "Language Proficiency (TEER 0/1)": ["CLB/NCLC 9+", "CLB/NCLC 8", "CLB/NCLC 7", "CLB/NCLC 6"],
-  "Language Proficiency (TEER 2/3)": ["CLB/NCLC 8+", "CLB/NCLC 7", "CLB/NCLC 6", "CLB/NCLC 5"],
-  "Language Proficiency (TEER 4/5)": ["CLB/NCLC 7+", "CLB/NCLC 6", "CLB/NCLC 5", "CLB/NCLC 4"],
-  "Education": ["Master's/PhD", "Bachelor's (3+ years)", "Post-secondary (1+ year)", "Canadian Secondary School Diploma"],
-  "Intent to Reside": ["Submitted genuine statement", "Not submitted"],
-  "Previous Work/Study in Community": ["0 years", "1 year", "2 years", "3+ years"],
-  "Close Family in Community": ["No", "Yes"],
-  "Community Involvement": ["No", "Yes"],
-  "Property in Community": ["No", "Yes"],
-  "Spouse/Common-law Experience": ["No", "Yes"]
+  "Human Capital - Work Experience": ["1 year full-time work experience", "2 years full-time work experience", "3 years full-time work experience", "4+ years full-time work experience", "International graduate exemption"],
+  "Human Capital - Language Proficiency (TEER 0/1)": ["CLB/NCLC 9+", "CLB/NCLC 8", "CLB/NCLC 7", "CLB/NCLC 6"],
+  "Human Capital - Language Proficiency (TEER 2/3)": ["CLB/NCLC 8+", "CLB/NCLC 7", "CLB/NCLC 6", "CLB/NCLC 5"],
+  "Human Capital - Language Proficiency (TEER 4/5)": ["CLB/NCLC 7+", "CLB/NCLC 6", "CLB/NCLC 5", "CLB/NCLC 4"],
+  "Human Capital - Education": ["Master's/PhD", "Bachelor's (3+ years)", "Post-secondary (1+ year)", "Canadian Secondary School Diploma"],
+  "Human Capital - Intent to Reside": ["Submitted genuine statement", "Not submitted"],
+  "Human Capital - Bonus Points": ["0 years/none", "Previous Work/Study 1 year", "Previous Work/Study 2 years", "Previous Work/Study 3+ years", "Close Family in Community", "Community Involvement", "Property in Community", "Spouse/Common-law Experience"]
 };
 
+// 對應分數（每區域上限會在計算時限制）
 const pointsMapping = {
-  "Priority Sector": [10, 15, 10, 15, 15],
-  "Priority Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
-  "Work Experience / International Graduate": [10,15,20,25,10],
-  "Language Proficiency (TEER 0/1)": [25,20,15,10],
-  "Language Proficiency (TEER 2/3)": [25,20,15,10],
-  "Language Proficiency (TEER 4/5)": [25,20,15,10],
-  "Education": [25,20,15,10],
-  "Intent to Reside": [10,0],
-  "Previous Work/Study in Community": [0,2,4,6],
-  "Close Family in Community": [0,2],
-  "Community Involvement": [0,2],
-  "Property in Community": [0,2],
-  "Spouse/Common-law Experience": [0,3]
+  "Job Offer - Section": [10,15,10,15,15],
+  "Job Offer - Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
+  "Human Capital - Work Experience": [10,15,20,25,10],
+  "Human Capital - Language Proficiency (TEER 0/1)": [25,20,15,10],
+  "Human Capital - Language Proficiency (TEER 2/3)": [25,20,15,10],
+  "Human Capital - Language Proficiency (TEER 4/5)": [25,20,15,10],
+  "Human Capital - Education": [25,20,15,10],
+  "Human Capital - Intent to Reside": [10,0],
+  "Human Capital - Bonus Points": [0,2,4,6,2,2,2,3] // 各 bonus 可累計，但 max 15
 };
 
-// Generate dropdowns
+// 分數上限
+const maxScores = {
+  "Job Offer - Section": 15,
+  "Job Offer - Occupation": 10,
+  "Human Capital - Work Experience": 25,
+  "Human Capital - Language Proficiency (TEER 0/1)": 25,
+  "Human Capital - Language Proficiency (TEER 2/3)": 25,
+  "Human Capital - Language Proficiency (TEER 4/5)": 25,
+  "Human Capital - Education": 25,
+  "Human Capital - Intent to Reside": 10,
+  "Human Capital - Bonus Points": 15
+};
+
+// 生成下拉選單
 const calculatorDiv = document.getElementById('calculator');
 const selectedValues = {};
 
 for (const category in categories) {
+  const h2 = document.createElement('h2');
+  h2.innerText = category;
+  calculatorDiv.appendChild(h2);
+
   const label = document.createElement('label');
-  label.innerText = category;
+  label.innerText = "Select Option:";
+  calculatorDiv.appendChild(label);
 
   const select = document.createElement('select');
   categories[category].forEach(option => {
@@ -120,23 +108,41 @@ for (const category in categories) {
   });
 
   selectedValues[category] = select;
-
-  calculatorDiv.appendChild(label);
   calculatorDiv.appendChild(select);
 }
 
-// Calculate points
+// 計算總分
 function calculatePoints() {
-  let totalPoints = 0;
+  let totalScore = 0;
+  const sectionScores = {};
 
   for (const category in selectedValues) {
     const select = selectedValues[category];
     const selectedOption = select.value;
-    const index = categories[category].indexOf(selectedOption);
-    totalPoints += pointsMapping[category][index];
+
+    if (category === "Human Capital - Bonus Points") {
+      // Bonus 可累計，計算累計但不超過上限
+      let bonus = 0;
+      categories[category].forEach((bonusOption, idx) => {
+        if (selectedOption.includes(bonusOption)) {
+          bonus += pointsMapping[category][idx];
+        }
+      });
+      sectionScores[category] = Math.min(bonus, maxScores[category]);
+    } else {
+      const index = categories[category].indexOf(selectedOption);
+      sectionScores[category] = Math.min(pointsMapping[category][index], maxScores[category]);
+    }
+    totalScore += sectionScores[category];
   }
 
-  document.getElementById('result').innerText = `Total Points: ${totalPoints}`;
+  // 顯示每區分數與總分
+  let resultText = '';
+  for (const section in sectionScores) {
+    resultText += `${section}: ${sectionScores[section]} / ${maxScores[section]}<br>`;
+  }
+  resultText += `<strong>Final Score: ${Math.min(totalScore,125)} / 125</strong>`;
+  document.getElementById('result').innerHTML = resultText;
 }
 </script>
 </body>
