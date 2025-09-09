@@ -9,7 +9,7 @@
   h1 { color: #24292e; }
   h2 { margin-top: 2rem; color: #0366d6; }
   label { display: block; margin-top: 0.5rem; }
-  select, .checkbox-group { width: 300px; padding: 0.5rem; margin-top: 0.3rem; text-align: left; }
+  select { width: 300px; padding: 0.5rem; margin-top: 0.3rem; text-align: left; }
   button, a.button {
     margin-top: 1.5rem;
     padding: 0.7rem 1.2rem;
@@ -25,7 +25,6 @@
   }
   button:hover, a.button:hover { background-color: #024ea2; }
   #result { margin-top: 1.5rem; font-weight: bold; font-size: 1.2rem; }
-  .checkbox-group label { display: block; margin: 0.2rem 0; }
   #details { display: none; margin-top: 1rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
 </style>
 </head>
@@ -82,31 +81,7 @@ const categories = {
 const pointsMapping = {
   "Job Offer - Section": [10,15,10,15,15],
   "Job Offer - Occupation": [
-    0, // Accounting Technicians and Bookkeepers
-    0, // Administrative Assistants
-    10, // Mining Engineers
-    10, // Mechanical Engineers
-    10, // Geological Engineers
-    10, // Civil Engineering Technologists and Technicians
-    10, // Mechanical Engineering Technologists and Technicians
-    10, // Electrical and Electronics Engineering Technologists and Technicians
-    10, // Physiotherapists
-    10, // Registered Nurses
-    8,  // Registered Practical Nurses
-    0,  // Rehabilitation Assistants
-    0,  // Personal Care Attendants
-    0,  // Dental Assistants
-    5,  // Social and Community Service Workers
-    7,  // Early Childhood Educators and Assistants
-    0,  // Home Support Workers, Caregivers, and related occupations
-    10, // Heavy Duty Equipment Mechanics
-    10, // Automotive Service Technicians, Truck and Bus Mechanics, and Mechanical Repairers
-    10, // Welders and Related Machine Operators
-    10, // Construction Millwrights and Industrial Mechanics
-    10, // Heavy Equipment Operators
-    5,  // Construction Trades Helpers and Labourers
-    2,  // Truck Drivers
-    2   // Labourers in Metal Processing
+    0,0,10,10,10,10,10,10,10,10,8,0,0,0,5,7,0,10,10,10,10,10,5,2,2
   ],
   "Human Capital - Work Experience": [10,15,20,25,10],
   "Human Capital - Education": [25,20,15,10],
@@ -123,7 +98,6 @@ const pointsMapping = {
   "Spouse/Common-law Experience": [3]
 };
 
-// 分數上限
 const maxScores = {
   "Job Offer - Section": 15,
   "Job Offer - Occupation": 10,
@@ -138,12 +112,10 @@ const maxScores = {
   "Spouse/Common-law Experience": 3
 };
 
-
 // 生成表單
 const calculatorDiv = document.getElementById('calculator');
 const selectedValues = {};
 
-// 一般選項
 for (const category in categories) {
   const h2 = document.createElement('h2');
   h2.innerText = category;
@@ -193,40 +165,48 @@ for (const category in categories) {
   }
 }
 
-// Bonus Points 區塊
+// Bonus Points
 const h2Bonus = document.createElement('h2');
 h2Bonus.innerText = 'Bonus Points';
 calculatorDiv.appendChild(h2Bonus);
 
-// Previous Work/Study (單選)
+// Work/Study 下拉
+const workStudyLabel = document.createElement('label');
+workStudyLabel.innerText = "Candidate has previously worked and/or studied in the community.";
 const previousSelect = document.createElement('select');
 previousSelect.id = 'previousSelect';
-["1 year","2 years","3+ years"].forEach((opt,idx)=>{
+["None","1 year (combined)","2 years (combined)","3 years or more (combined)"].forEach((opt,idx)=>{
   const option = document.createElement('option');
   option.value = opt;
   option.innerText = opt;
   previousSelect.appendChild(option);
 });
+calculatorDiv.appendChild(workStudyLabel);
 calculatorDiv.appendChild(previousSelect);
 selectedValues['Previous Work/Study in Community'] = previousSelect;
 
-// 其他多選
-const bonusCheckboxes = ["Close Family in Community","Community Involvement","Property in Community","Spouse/Common-law Experience"];
-bonusCheckboxes.forEach(cat=>{
-  const div = document.createElement('div');
-  div.className = 'checkbox-group';
+// 其他 Yes/No 下拉
+function addYesNoSelect(labelText, key){
   const label = document.createElement('label');
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.dataset.idx = 0;
-  label.appendChild(input);
-  label.appendChild(document.createTextNode(' ' + cat));
-  div.appendChild(label);
-  calculatorDiv.appendChild(div);
-  selectedValues[cat] = div;
-});
+  label.innerText = labelText;
+  const select = document.createElement('select');
+  ["No","Yes"].forEach(opt=>{
+    const option = document.createElement('option');
+    option.value = opt;
+    option.innerText = opt;
+    select.appendChild(option);
+  });
+  calculatorDiv.appendChild(label);
+  calculatorDiv.appendChild(select);
+  selectedValues[key] = select;
+}
 
-// 計算總分
+addYesNoSelect("You currently has a close family member (18 years or older) who is a permanent resident or Canadian citizen and who has been living in the community for a minimum of 12 months.", 'Close Family in Community');
+addYesNoSelect("You has been volunteering with a community organization or part of a community group or sports team for at least 3 months.", 'Community Involvement');
+addYesNoSelect("You are renting a property or owns a property in the community.", 'Property in Community');
+addYesNoSelect("Your spouse/common law partner has work or study experience (6 month minimum) in the community.", 'Spouse/Common-law Experience');
+
+// 計算邏輯
 let sectionScores = {};
 function calculatePoints(){
   let jobOfferTotal=0;
@@ -236,8 +216,8 @@ function calculatePoints(){
   for(const category in selectedValues){
     let score=0;
     if(['Close Family in Community','Community Involvement','Property in Community','Spouse/Common-law Experience'].includes(category)){
-      const checkboxes = selectedValues[category].querySelectorAll('input[type=checkbox]');
-      checkboxes.forEach(cb=>{if(cb.checked) score+=pointsMapping[category][cb.dataset.idx];});
+      const val = selectedValues[category].value;
+      if(val==="Yes") score = pointsMapping[category][0];
       score=Math.min(score,maxScores[category]);
     } else if(category==='LanguageProficiency'){
       const teer=selectedValues[category].teer.value;
@@ -246,19 +226,23 @@ function calculatePoints(){
       score=Math.min(score,maxScores['LanguageProficiency']);
     } else {
       const sel=selectedValues[category];
-      const idx = Array.from(sel.options).findIndex(o=>o.selected);
-      score = Math.min(pointsMapping[category][idx], maxScores[category]);
+      const idx = sel.selectedIndex;
+      if(category==='Previous Work/Study in Community'){
+        score = idx===0 ? 0 : pointsMapping[category][idx-1];
+      } else {
+        score = Math.min(pointsMapping[category][idx], maxScores[category]);
+      }
     }
     sectionScores[category]=score;
     if(category.startsWith('Job Offer')) jobOfferTotal+=score;
     else humanCapitalTotal+=score;
   }
 
-document.getElementById('result').innerHTML=`
-  Total Points for Job Offer: ${Math.min(jobOfferTotal,25)} / 25<br>
-  Human Capital Assessment: ${Math.min(humanCapitalTotal,100)} / 100<br>
-  <strong>Total Points: ${Math.min(jobOfferTotal,25) + Math.min(humanCapitalTotal,100)} / 125</strong>
-`;
+  document.getElementById('result').innerHTML=`
+    Total Points for Job Offer: ${Math.min(jobOfferTotal,25)} / 25<br>
+    Human Capital Assessment: ${Math.min(humanCapitalTotal,100)} / 100<br>
+    <strong>Total Points: ${Math.min(jobOfferTotal,25) + Math.min(humanCapitalTotal,100)} / 125</strong>
+  `;
   document.getElementById('details').style.display='none';
 }
 
@@ -277,7 +261,7 @@ function toggleDetails(){
     }
 
     bonusTotal = Math.min(bonusTotal, 15);
-    text += `Bonus Points: ${bonusTotal} / 15<br>`; // 合併Bonus
+    text += `Bonus Points: ${bonusTotal} / 15<br>`;
 
     detailsDiv.innerHTML=text;
     detailsDiv.style.display='block';
@@ -285,7 +269,6 @@ function toggleDetails(){
     detailsDiv.style.display='none';
   }
 }
-
 </script>
 </body>
 </html>
