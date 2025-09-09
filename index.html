@@ -8,8 +8,8 @@
   body { font-family: Arial, sans-serif; margin: 2rem; text-align: center; }
   h1 { color: #24292e; }
   h2 { margin-top: 2rem; color: #0366d6; }
-  label { display: block; margin-top: 1rem; }
-  select { width: 300px; padding: 0.5rem; margin-top: 0.3rem; }
+  label { display: block; margin-top: 0.5rem; }
+  select, .checkbox-group { width: 300px; padding: 0.5rem; margin-top: 0.3rem; text-align: left; }
   button, a.button {
     margin-top: 1.5rem;
     padding: 0.7rem 1.2rem;
@@ -25,6 +25,8 @@
   }
   button:hover, a.button:hover { background-color: #024ea2; }
   #result { margin-top: 1.5rem; font-weight: bold; font-size: 1.2rem; }
+  .checkbox-group label { display: block; margin: 0.2rem 0; }
+  #details { display: none; margin-top: 1rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
 </style>
 </head>
 <body>
@@ -33,9 +35,11 @@
 <div id="calculator"></div>
 
 <button onclick="calculatePoints()">Calculate Points</button>
-<a class="button" href="https://investsudbury.ca/why-sudbury/newcomers/rcipfcip/" target="_blank">RCIP Info</a>
+<button onclick="toggleDetails()">Show Details</button>
+<a class="button" href="https://investsudbury.ca/programs/rural-community-immigration-pilot/" target="_blank">RCIP Info</a>
 
 <div id="result"></div>
+<div id="details"></div>
 
 <script>
 // 分區類別與選項
@@ -57,10 +61,10 @@ const categories = {
   "Human Capital - Language Proficiency (TEER 4/5)": ["CLB/NCLC 7+", "CLB/NCLC 6", "CLB/NCLC 5", "CLB/NCLC 4"],
   "Human Capital - Education": ["Master's/PhD", "Bachelor's (3+ years)", "Post-secondary (1+ year)", "Canadian Secondary School Diploma"],
   "Human Capital - Intent to Reside": ["Submitted genuine statement", "Not submitted"],
-  "Human Capital - Bonus Points": ["0 years/none", "Previous Work/Study 1 year", "Previous Work/Study 2 years", "Previous Work/Study 3+ years", "Close Family in Community", "Community Involvement", "Property in Community", "Spouse/Common-law Experience"]
+  "Human Capital - Bonus Points": ["Previous Work/Study 1 year", "Previous Work/Study 2 years", "Previous Work/Study 3+ years", "Close Family in Community", "Community Involvement", "Property in Community", "Spouse/Common-law Experience"]
 };
 
-// 對應分數（每區域上限會在計算時限制）
+// 對應分數
 const pointsMapping = {
   "Job Offer - Section": [10,15,10,15,15],
   "Job Offer - Occupation": [10,10,10,10,10,10,10,10,8,5,7,10,10,10,10,10,5,2,2],
@@ -70,7 +74,7 @@ const pointsMapping = {
   "Human Capital - Language Proficiency (TEER 4/5)": [25,20,15,10],
   "Human Capital - Education": [25,20,15,10],
   "Human Capital - Intent to Reside": [10,0],
-  "Human Capital - Bonus Points": [0,2,4,6,2,2,2,3] // 各 bonus 可累計，但 max 15
+  "Human Capital - Bonus Points": [2,4,6,2,2,2,3] // 可累計，最大 15
 };
 
 // 分數上限
@@ -86,7 +90,7 @@ const maxScores = {
   "Human Capital - Bonus Points": 15
 };
 
-// 生成下拉選單
+// 生成表單
 const calculatorDiv = document.getElementById('calculator');
 const selectedValues = {};
 
@@ -95,54 +99,84 @@ for (const category in categories) {
   h2.innerText = category;
   calculatorDiv.appendChild(h2);
 
-  const label = document.createElement('label');
-  label.innerText = "Select Option:";
-  calculatorDiv.appendChild(label);
-
-  const select = document.createElement('select');
-  categories[category].forEach(option => {
-    const opt = document.createElement('option');
-    opt.value = option;
-    opt.innerText = option;
-    select.appendChild(opt);
-  });
-
-  selectedValues[category] = select;
-  calculatorDiv.appendChild(select);
+  if(category === "Human Capital - Bonus Points") {
+    const checkboxGroup = document.createElement('div');
+    checkboxGroup.className = 'checkbox-group';
+    categories[category].forEach((option, idx) => {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = option;
+      input.dataset.idx = idx;
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(' ' + option));
+      checkboxGroup.appendChild(label);
+    });
+    calculatorDiv.appendChild(checkboxGroup);
+    selectedValues[category] = checkboxGroup;
+  } else {
+    const select = document.createElement('select');
+    categories[category].forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = option;
+      opt.innerText = option;
+      select.appendChild(opt);
+    });
+    selectedValues[category] = select;
+    calculatorDiv.appendChild(select);
+  }
 }
 
 // 計算總分
+let sectionScores = {}; // 儲存每區分數
 function calculatePoints() {
-  let totalScore = 0;
-  const sectionScores = {};
+  let jobOfferTotal = 0;
+  let humanCapitalTotal = 0;
+  sectionScores = {};
 
   for (const category in selectedValues) {
-    const select = selectedValues[category];
-    const selectedOption = select.value;
-
-    if (category === "Human Capital - Bonus Points") {
-      // Bonus 可累計，計算累計但不超過上限
-      let bonus = 0;
-      categories[category].forEach((bonusOption, idx) => {
-        if (selectedOption.includes(bonusOption)) {
-          bonus += pointsMapping[category][idx];
+    let score = 0;
+    if(category === "Human Capital - Bonus Points") {
+      const checkboxes = selectedValues[category].querySelectorAll('input[type=checkbox]');
+      checkboxes.forEach(cb => {
+        if(cb.checked){
+          score += pointsMapping[category][cb.dataset.idx];
         }
       });
-      sectionScores[category] = Math.min(bonus, maxScores[category]);
+      score = Math.min(score, maxScores[category]);
     } else {
+      const select = selectedValues[category];
+      const selectedOption = select.value;
       const index = categories[category].indexOf(selectedOption);
-      sectionScores[category] = Math.min(pointsMapping[category][index], maxScores[category]);
+      score = Math.min(pointsMapping[category][index], maxScores[category]);
     }
-    totalScore += sectionScores[category];
+    sectionScores[category] = score;
+
+    if(category.startsWith("Job Offer")) jobOfferTotal += score;
+    else humanCapitalTotal += score;
   }
 
-  // 顯示每區分數與總分
-  let resultText = '';
-  for (const section in sectionScores) {
-    resultText += `${section}: ${sectionScores[section]} / ${maxScores[section]}<br>`;
+  document.getElementById('result').innerHTML = `
+    Total Points for Job Offer: ${Math.min(jobOfferTotal,25)} / 25<br>
+    Human Capital Assessment: ${Math.min(humanCapitalTotal,100)} / 100
+  `;
+
+  document.getElementById('details').style.display = 'none'; // hide details initially
+}
+
+// 顯示/隱藏詳細分數
+function toggleDetails(){
+  const detailsDiv = document.getElementById('details');
+  if(detailsDiv.style.display === 'none'){
+    let detailText = '';
+    for (const section in sectionScores) {
+      detailText += `${section}: ${sectionScores[section]} / ${maxScores[section]}<br>`;
+    }
+    detailsDiv.innerHTML = detailText;
+    detailsDiv.style.display = 'block';
+  } else {
+    detailsDiv.style.display = 'none';
   }
-  resultText += `<strong>Final Score: ${Math.min(totalScore,125)} / 125</strong>`;
-  document.getElementById('result').innerHTML = resultText;
 }
 </script>
 </body>
