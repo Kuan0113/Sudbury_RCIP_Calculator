@@ -2,8 +2,8 @@
 
 This project provides three versions of the **Sudbury RCIP Scoring Calculator**, helping newcomers assess their eligibility for the **Sudbury Rural and Community Immigration Program (RCIP)**. Users can calculate total points based on **job offer, human capital, language proficiency, education, intent to reside, and bonus points**.
 
-- **Python Version:** A Tkinter-based GUI for Windows and Python environments.  
-- **HTML Version:** A web-based version that can be run in any modern browser.  
+- [**Python Version:**](#-Installation) A Tkinter-based GUI for Windows and Python environments.  
+- [**HTML Version:**](#-HTML-Version) A web-based version that can be run in any modern browser.  
 - **Executable (.exe) Version:** Ready-to-run Windows executable for users without Python.
 
 ---
